@@ -1,0 +1,13 @@
+server:
+  port: 9009
+spring:
+  application:
+    name: tensquare-sms
+  rabbitmq:
+    host: 10.211.55.9
+aliyun:
+  sms:
+    accessKeyId:
+    accessKeySecret:
+    template_code:
+    sign_name:

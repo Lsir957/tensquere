@@ -3,11 +3,6 @@ server:
 spring:
   application:
     name: tensquare-spit
-  datasource:
-    driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://10.211.55.9:3306/tensquare_spit?characterEncoding=UTF8
-    username: root
-    password: root
   jpa:
     show-sql: true
     database: mysql
@@ -16,3 +11,6 @@ spring:
       host: 10.211.55.9
       port: 27017
       database: spitdb
+  redis:
+    host: 10.211.55.9
+    port: 6379
