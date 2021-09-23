@@ -1,6 +1,8 @@
 package com.tensquare.user.controller;
+import java.util.HashMap;
 import java.util.Map;
 
+import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -16,6 +18,10 @@ import com.tensquare.user.service.UserService;
 import entity.PageResult;
 import entity.Result;
 import entity.StatusCode;
+import util.JwtUtil;
+
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * 控制器层
  * @author Administrator
@@ -28,7 +34,13 @@ public class UserController {
 
 	@Autowired
 	private UserService userService;
-	
+
+	@Autowired
+	private HttpServletRequest request;
+
+	@Autowired
+	private JwtUtil jwtUtil;
+
 	
 	/**
 	 * 查询全部数据
@@ -36,6 +48,7 @@ public class UserController {
 	 */
 	@RequestMapping(method= RequestMethod.GET)
 	public Result findAll(){
+
 		return new Result(true,StatusCode.OK,"查询成功",userService.findAll());
 	}
 	
@@ -100,6 +113,10 @@ public class UserController {
 	 */
 	@RequestMapping(value="/{id}",method= RequestMethod.DELETE)
 	public Result delete(@PathVariable String id ){
+		Claims body = (Claims) request.getAttribute("admin_roles");
+		if (body == null ){
+			return new Result(false,StatusCode.ACCESS_ERROR,"权限不足");
+		}
 		userService.deleteById(id);
 		return new Result(true,StatusCode.OK,"删除成功");
 	}
@@ -127,15 +144,24 @@ public class UserController {
 	}
 
 
-
-	/*
-	@RequestMapping(value = "/register/{code}",method = RequestMethod.POST)
-	public Result register(@PathVariable String code,@RequestBody User user){
-		Boolean flag = userService.register(code,user);
-
-		if(!flag){
-			return new Result(false,StatusCode.ERROR,"验证码输入有误");
+	/**
+	 * 登录用户
+	 */
+	@RequestMapping(value = "/login",method = RequestMethod.POST)
+	public Result login(@RequestBody User user){
+		//获取用户名和密码
+		User loginUser = userService.login(user);
+		//用户名或密码错误提示用户
+		if (loginUser == null){
+			return new Result(false,StatusCode.OK,"用户名或密码错误");
 		}
-		return new Result(true,StatusCode.OK,"注册成功");
-	}*/
+		String token = jwtUtil.createJWT(user.getId(), user.getNickname(), "user");
+		Map data = new HashMap();
+		data.put("token",token);
+		data.put("name",user.getNickname());
+		data.put("avatar",user.getAvatar());
+
+		return new Result(true,StatusCode.OK,"登录成功",data);
+
+	}
 }

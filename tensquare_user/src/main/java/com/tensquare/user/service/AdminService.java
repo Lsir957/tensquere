@@ -12,11 +12,13 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
 
+import com.tensquare.user.WebSecurityConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import util.IdWorker;
@@ -38,6 +40,9 @@ public class AdminService {
 	
 	@Autowired
 	private IdWorker idWorker;
+
+	@Autowired
+	private BCryptPasswordEncoder encoder;
 
 	/**
 	 * 查询全部列表
@@ -81,12 +86,16 @@ public class AdminService {
 		return adminDao.findById(id).get();
 	}
 
+
 	/**
 	 * 增加
 	 * @param admin
 	 */
 	public void add(Admin admin) {
 		admin.setId( idWorker.nextId()+"" );
+		String newPassword = encoder.encode(admin.getPassword());
+		admin.setPassword(newPassword);
+
 		adminDao.save(admin);
 	}
 
@@ -142,4 +151,12 @@ public class AdminService {
 
 	}
 
+	public Admin login(Admin admin) {
+		Admin loginAdmin = adminDao.findByLoginname(admin.getLoginname());
+		//判断密码
+		if(loginAdmin!=null && encoder.matches(admin.getPassword(),loginAdmin.getPassword())){
+			return loginAdmin;
+		}
+			return null;
+	}
 }

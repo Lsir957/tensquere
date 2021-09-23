@@ -18,6 +18,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import util.IdWorker;
@@ -38,6 +39,10 @@ public class UserService {
 
     @Autowired
     private IdWorker idWorker;
+
+    @Autowired
+    private BCryptPasswordEncoder encoder;
+
 
     /**
      * 查询全部列表
@@ -92,6 +97,10 @@ public class UserService {
      */
     public void add(User user) {
         user.setId(idWorker.nextId() + "");
+        //获取加密方法
+        String newPassword = encoder.encode(user.getPassword());
+        user.setPassword(newPassword);
+
         userDao.save(user);
     }
 
@@ -209,27 +218,17 @@ public class UserService {
         return false;
     }
 
+    public User login(User user) {
+        //获取用户名
+        User loginUser = userDao.findByMobile(user.getMobile());
+        //对比用户输入的密码是否与数据库一样
+        if(loginUser!=null && encoder.matches(user.getPassword(),loginUser.getPassword()) ){
+            return loginUser;
+        }
+        //否则返回null
+        return null;
+    }
 
-	/*
-	public Boolean register(String code,User user){
-		//1.从redis取出系统生成的验证码
-		String redisCode = (String)redisTemplate.opsForValue().get("sms_"+user.getMobile());
 
-		//2.判断用户输入的和系统的是否一致
-		if(redisCode!=null && redisCode.equals(code)){
-			//成功
-			//保存用户信息到数据库
 
-			user.setId(idWorker.nextId()+"");
-			user.setRegdate(new Date());
-			user.setUpdatedate(new Date());
-			user.setFollowcount(0);
-			user.setFanscount(0);
-
-			userDao.save(user);
-
-			return true;
-		}
-		return false;
-	} */
 }
