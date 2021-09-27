@@ -2,6 +2,7 @@ package com.tensquare.qa.controller;
 import java.util.List;
 import java.util.Map;
 
+import com.tensquare.qa.client.LabelClient;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -36,6 +37,8 @@ public class ProblemController {
 
 	@Autowired
 	private HttpServletRequest request;
+
+
 	
 	
 	/**
@@ -146,5 +149,13 @@ public class ProblemController {
 	public Result waitlist(@PathVariable String labelid,@PathVariable Integer page,@PathVariable Integer size){
 		Page<Problem> pageData = problemService.waitlist(labelid,page,size);
 		return new Result(true,StatusCode.OK,"查询成功",new PageResult<>(pageData.getTotalElements(),pageData.getContent()));
+	}
+
+	@Autowired
+	private LabelClient labelClient;
+
+	@RequestMapping(value = "/findByLabelid/{id}",method = RequestMethod.GET)
+	public Result findByLabelid(@PathVariable String id){
+		return labelClient.findById(id);
 	}
 }
